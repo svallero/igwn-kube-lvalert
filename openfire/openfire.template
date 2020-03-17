@@ -1,0 +1,65 @@
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!--
+         This file stores bootstrap properties needed by Openfire.
+    Property names must be in the format: "prop.name.is.blah=value"
+    That will be stored as:
+        <prop>
+            <name>
+                <is>
+                    <blah>value</blah>
+                </is>
+            </name>
+        </prop>
+
+    Most properties are stored in the Openfire database. A
+    property viewer and editor is included in the admin console.
+-->
+<!-- root element, all properties must be under this element -->
+<jive> 
+  <adminConsole> 
+    <!-- Disable either port by setting the value to -1 -->  
+    <port>9090</port>  
+    <securePort>9091</securePort> 
+  </adminConsole>  
+  <locale>en</locale>  
+  <!-- Network settings. By default, Openfire will bind to all network interfaces.
+             Alternatively, you can specify a specific network interfaces that the server
+      will listen on. For example, 127.0.0.1. This setting is generally only useful
+       on multi-homed servers. -->  
+  <!--
+           <network>
+        <interface></interface>
+    </network>
+    -->  
+  <!--
+               One time token to gain temporary access to the admin console.
+    -->  
+  <!--
+           <oneTimeAccessToken>secretToken</oneTimeAccessToken>
+    -->  
+  <autosetup>
+      <run>true</run>
+        <locale>en</locale>
+        <xmpp>
+          <domain>${HOSTNAME}</domain>
+          <fqdn>${HOSTNAME}</fqdn>
+        </xmpp>
+        <encryption>
+          <algorithm>Blowfish</algorithm>
+          <key>${ENCRYPTION_KEY}</key>
+        </encryption>
+        <database>
+          <mode>standard</mode>
+          <defaultProvider>
+            <driver>com.mysql.cj.jdbc.Driver</driver>
+            <serverURL>jdbc:mysql://${DB_HOST}:3306/${DB_NAME}?rewriteBatchedStatements=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8</serverURL>
+            <username>${DB_USER}</username>
+            <password>${DB_PASSWORD}</password>
+          </defaultProvider>
+        </database>
+        <admin>
+          <email>admin@example.com</email>
+          <password>${ADMIN_PASSWORD}</password>
+        </admin>
+  </autosetup>
+</jive>
