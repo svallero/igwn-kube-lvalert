@@ -1,0 +1,277 @@
+\"\"\"
+Script for creating new lvalert nodes and adding users
+as a publisher. Relies on lvalert username and password
+being saved in \$HOME/.netrc file.
+
+This basically runs lvalert_admin as a command-line process
+and captures/parses the output.  It's *really* janky,
+but faster than basically duplicating lvalert_admin and some of
+ligo.lvalert.pubsub just for this.
+
+NOTE: *ONLY USE THIS SCRIPT WITH THE gracedb LVAlert ACCOUNT FOR
+THE LVAlert SERVER YOU ARE WORKING WITH*
+i.e., gracedb@lvalert.cgca.uwm.edu for lvalert.cgca.uwm.edu
+      gracedb@lvalert-test.cgca.uwm.edu for lvalert-test.cgca.uwm.edu
+THERE IS A CHECK IN PLACE TO MAKE SURE THIS IS THE CASE.
+We want the gracedb account to own/manage the standard nodes
+for production and testing LVAlerts.
+
+Usage:
+source ~/djangoenv/bin/activate
+python add_lvalert_nodes.py
+
+Edit parameters below as desired.
+\"\"\"
+
+import netrc
+import re
+import subprocess
+
+# Parameters to modify ------------------------
+
+# See docstring above.
+# SET TO FALSE AT YOUR OWN RISK
+enforce_gracedb_acct = True
+
+# lvalert servers to add these nodes on
+servers = [
+    #'lvalert.cgca.uwm.edu',
+    #'lvalert-test.cgca.uwm.edu',
+    #'lvalert-playground.cgca.uwm.edu',
+    '${LVALERT_SERVER}',
+]
+
+# list of publishers to add to the nodes.
+# if not specified, will use the user found
+# in ~/.netrc
+# NOTE: don't add any publishers other than 'gracedb'
+# to the production server (lvalert.cgca.uwm.edu)
+pub_list = {
+    'lvalert.lvalert': [
+        'gracedb',
+    ],
+#    'lvalert.cgca.uwm.edu': [
+#        'gracedb',
+#    ],
+#    'lvalert-test.cgca.uwm.edu': [
+#        'gracedb',
+#        'gracedb-test',
+#        'gracedb-dev1',
+#        'gracedb-dev2',
+#        'gracedb-playground',
+#    ],
+#    'lvalert-playground.cgca.uwm.edu': [
+#        'gracedb',
+#        'gracedb-playground',
+#    ],
+}
+# Note that only a node's OWNER (the user who created it)
+# can add publishers. The gracedb account on each server
+# (lvalert.cgca.uwm.edu and lvalert-test.cgca.uwm.edu)
+# should be the owner of all \"production\" nodes (even on
+# the test server)
+
+# Dict of nodes
+# Hierarchy: group -> pipeline -> search type (if any)
+# For each group, pipeline, search combo, we create:
+#   group_pipeline
+#   test_pipeline
+#   group_pipeline_search
+#   test_pipeline_search
+node_dict = {
+    'burst': {
+        'cwb': ['allsky', 'allskylong', 'mdc', 'o2virgotest', 'bbh', 'imbh'],
+        'cwb2g': ['allsky', 'allskylong', 'mdc', 'o2virgotest', 'bbh', 'imbh'],
+        'olib': ['allsky', 'allskylong', 'mdc', 'o2virgotest', 'bbh', 'imbh'],
+        'omega': [],
+    },
+    'cbc': {
+        'gstlal': ['lowmass', 'highmass', 'allsky', 'allskylong', 'mdc',
+            'lowmasssim', 'o2virgotest', 'bbh', 'imbh'],
+        'spiir': ['lowmass', 'highmass', 'allsky', 'allskylong', 'mdc',
+            'o2virgotest', 'bbh', 'imbh'],
+        'pycbc': ['lowmass', 'highmass', 'allsky', 'allskylong', 'mdc',
+            'o2virgotest', 'bbh', 'imbh'],
+        'mbtaonline': ['lowmass','highmass', 'allsky', 'allskylong', 'mdc',
+            'o2virgotest', 'bbh', 'imbh'],
+    },
+    'external': {
+        'swift': ['grb', 'subgrb'],
+        # Because people are/were incorrectly using 'grb' for SNEWS events
+        'snews': ['grb', 'supernova', 'subgrb'],
+        'fermi': ['grb', 'subgrb'],
+    },
+}
+
+# add any extra nodes here which don't follow this prescription
+extra_nodes = ['superevent', 'test_superevent', 'mdc_superevent']
+
+# Utility functions -----------------------------
+
+def generate_node_list(node_dict, extra_nodes):
+    \"\"\"Generate list of nodes to manage\"\"\"
+
+    node_list = []
+    for group in node_dict:
+        for pipeline in node_dict[group]:
+            # Add 'group_pipeline' and 'test_pipeline' nodes
+            node_list.append('{0}_{1}'.format(group,pipeline))
+            node_list.append('test_{0}'.format(pipeline))
+
+            # if this pipeline has any searches, add them too.
+            # 'group_pipeline_search' and 'test_pipeline_search'
+            if (len(node_dict[group][pipeline]) > 0):
+                for search in node_dict[group][pipeline]:
+                    node_list.append('{0}_{1}_{2}'.format(group,pipeline,search))
+                    node_list.append('test_{0}_{1}'.format(pipeline,search))
+
+    # add extra nodes
+    node_list.extend(extra_nodes)
+
+    return node_list
+
+def get_existing_nodes(server):
+    \"\"\"Get list of existing nodes on this server\"\"\"
+
+    node_cmd = (\"lvalert_admin --server {0} --resource admin\"
+                \" --get-nodes\").format(server)
+    p = subprocess.Popen(node_cmd, shell=True, stdin=subprocess.PIPE,
+                         stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    if err:
+        raise Exception(err)
+    # parse list
+    existing_nodes = re.findall('Node: ([a-zA-Z0-9_-]+),', out)
+
+    return existing_nodes 
+
+def create_node(node, server, existing_nodes):
+    \"\"\"Attempt to create node on server\"\"\"
+
+    error = False
+    # Check if node is already present
+    if node in existing_nodes:
+        print \"\tINFO: node {0} already exists on server {1}\".format(
+            node, server)
+        created = False
+    else:
+        print \"\tINFO: creating node {0} for server {1}\".format(
+            node, server)
+        cmd = (\"lvalert_admin --server {0} --resource admin\"
+               \" --create --node {1}\").format(server, node)
+        p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+   
+        if err:
+            print \"\tERROR: failed to create node {0}: {1}\".format(
+                node, err)
+            created = False; error = True
+        else:
+            created = True
+
+    return created, error
+
+def get_node_publishers(node, server):
+    # get node affiliations
+    aff_cmd = (\"lvalert_admin --server {0} --resource admin\"
+               \" --affiliations {1}\").format(server, node)
+    p = subprocess.Popen(aff_cmd, shell=True, stdin=subprocess.PIPE,
+                         stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    
+    # assume that if there was an error, it's because
+    # you're not the node's owner
+    if err:
+        print \"\t\tERROR: failed to get affiliations for node {0}\".format(node)
+        print \"\t\t       You're probably not the owner of this node.\"
+        raise Exception(err)
+
+    # otherwise, parse affiliations
+    current_pubs = re.findall('Affiliation: ([a-zA-Z0-9_-]+)@', out)
+
+    return current_pubs
+
+def update_node_publishers(node, current_pubs, pub_list):
+    \"\"\"
+    Add or remove publishers to/from an LVAlert node to match the expected
+    set of publishers (pub_list)
+    \"\"\"
+
+    # Add publishers
+    for pub in pub_list:
+        if pub not in current_pubs:
+            # add publisher
+            print(\"\t\tINFO: adding publisher {0} for node {1}\".format(
+                pub, node))
+            cmd = (\"lvalert_admin --server {0} --resource admin \"
+                \"--add-publisher {1} --node {2}\").format(server, pub, node)
+            p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            out, err = p.communicate()
+
+            if err:
+                print \"\t\tERROR: failed to add publisher {0} for node {1}\" \
+                    .format(pub, node, server)
+        else:
+            # publisher already exists
+            print \"\t\tINFO: publisher {0} already exists for node {1}\" \
+                .format(pub, node, server)
+
+    # Remove publishers
+    for pub in current_pubs:
+        if pub not in pub_list:
+            print(\"\t\tINFO: removing publisher {0} for node {1}\".format(
+                pub, node))
+            cmd = (\"lvalert_admin --server {0} --resource admin \"
+                \"--delete-publisher {1} --node {2}\").format(server, pub, node)
+            p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            out, err = p.communicate()
+
+            if err:
+                print \"\t\tERROR: failed to add publisher {0} for node {1}\" \
+                    .format(pub, node, server)
+
+
+# main code
+if __name__ == '__main__':
+
+    # get list of nodes
+    node_list = generate_node_list(node_dict, extra_nodes)
+
+    # loop over servers
+    for server in servers:
+        # check netrc file to get user, server
+        host_dict = netrc.netrc().hosts
+        if server not in host_dict.keys():
+            # skip server if not found in .netrc file.
+            print(\"WARNING: host {0} not found in ~/.netrc. Skipping...\" \
+                .format(server))
+            continue
+        else:
+            print(\"INFO: adding nodes for host {0}\".format(server))
+
+        if enforce_gracedb_acct and host_dict[server][0] != 'gracedb':
+            raise Exception(\"Must use gracedb account for server {0}\".format(
+                server))
+
+        # list of nodes which currently exist on this server
+        existing_nodes = get_existing_nodes(server)
+
+        for node in node_list:
+
+            # try to create node
+            node_created, error = create_node(node, server, existing_nodes)
+
+            # add publishers (if any are specified)
+            if server in pub_list:
+                # get list of current publishers on node
+                current_pubs = get_node_publishers(node, server)
+
+                # Add or remove publishers as deemed necessary based on
+                # list of expected publishers
+                update_node_publishers(node, current_pubs, pub_list[server])
+
+    raise SystemExit, 0
+# End of file
