@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: lvalert-add-nodes
+  namespace: lvalert
+spec:
+  template:
+    spec:
+      containers:
+      - name: cli
+        image: svallero/igwn-lvalert-cli:test 
+        imagePullPolicy: Always
+        #command: ["sleep"," 10000000000"]
+        env:
+          - name: LVALERT_SERVER
+            value: lvalert
+          - name: LVALERT_USER
+            value: gracedb
+          - name: LVALERT_PASSWORD
+            valueFrom:                                               
+              secretKeyRef:                                          
+                name: lvalert-secrets                                
+                key: lvalert-password   
+      restartPolicy: Never
+  backoffLimit: 4

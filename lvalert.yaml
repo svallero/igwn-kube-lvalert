@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lvalert
+  namespace: lvalert
+spec:                                                              
+  selector:                                                        
+    matchLabels:                                                   
+      app: lvalert                                                 
+  strategy:                                                        
+    type: Recreate                                                 
+  template:                                                        
+    metadata:                                                      
+      labels:                                                      
+        app: lvalert                                               
+    spec:    
+      hostname: lvalert                                            
+      containers:                                                  
+      - name: openfire    
+        image: svallero/igwn-openfire:test                                  
+        env:     
+        - name: ADMIN_PASSWORD                                        
+          valueFrom:                                          
+            secretKeyRef:                                     
+              name: lvalert-secrets                           
+              key: admin-password      
+        - name: DB_USERNAME                                        
+          value: lvalert                                           
+        - name: DB_PASSWORD                                        
+          valueFrom:                                          
+            secretKeyRef:                                     
+              name: lvalert-secrets                           
+              key: db-password      
+        - name: DB_HOST                                            
+          value: localhost                                         
+        - name: DB_NAME                                            
+          value: lvalert                                           
+        - name: ENCRYPTION_KEY                                     
+          valueFrom:                                          
+            secretKeyRef:                                     
+              name: lvalert-secrets                           
+              key: encryption-key      
+        - name: GRACEDB_INSTANCE                                   
+          #value: gracedb-test.gracedb-test.svc.cluster.local       
+          value: gracedb-test.gracedb-test     
+        ports:                    
+        # Are all these ports required?                 
+        - name: of-0                                               
+          containerPort: 9090                                      
+        - name: of-1                                               
+          containerPort: 5222                                      
+        - name: of-2                                               
+          containerPort: 5269                                      
+        - name: of-3                                               
+          containerPort: 5223                                      
+        - name: of-4                                               
+          containerPort: 7443                                      
+        - name: of-5                                               
+          containerPort: 7777                                      
+        - name: of-6                                               
+          containerPort: 7070                                      
+        - name: of-7                                               
+          containerPort: 5229     
+      - name: mysql                                                
+        image: mariadb:10.5.1                                      
+        env:              
+        - name: MYSQL_ROOT_PASSWORD                                
+          valueFrom:                                          
+            secretKeyRef:                                     
+              name: lvalert-secrets                           
+              key: db-root-password      
+        - name: MYSQL_USER                                         
+          value: lvalert                                          
+        - name: MYSQL_PASSWORD                                     
+          valueFrom:                                          
+            secretKeyRef:                                     
+              name: lvalert-secrets                           
+              key: db-password      
+        - name: MYSQL_DATABASE                                     
+          value: lvalert                                           
+        ports:                                                     
+        - name: mysql                                              
+          containerPort: 3306                                      
+        volumeMounts:                                              
+        - name: mysql-persistent-storage                           
+          mountPath: /var/lib/mysql    
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:                                                     
+      - name: mysql-persistent-storage                             
+        persistentVolumeClaim:                                     
+          claimName: lvalert-mysql-pvc      
+      - name: mysql-initdb
+        secret:
+          secretName: mysql-initdb-config
