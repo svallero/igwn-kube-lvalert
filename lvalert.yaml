@@ -19,6 +19,10 @@ spec:
       - name: openfire    
         image: svallero/igwn-openfire:test                                  
         env:     
+        - name: SERVER_FQDN
+          value: lvalert.lvalert
+        - name: SERVER_XMPP_DOMAIN
+          value: lvalert.lvalert
         - name: ADMIN_PASSWORD                                        
           valueFrom:                                          
             secretKeyRef:                                     

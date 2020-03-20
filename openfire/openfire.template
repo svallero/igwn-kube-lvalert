@@ -41,8 +41,8 @@
       <run>true</run>
         <locale>en</locale>
         <xmpp>
-          <domain>${HOSTNAME}</domain>
-          <fqdn>${HOSTNAME}</fqdn>
+          <domain>${SERVER_XMPP_DOMAIN}</domain>
+          <fqdn>${SERVER_FQDN}</fqdn>
         </xmpp>
         <encryption>
           <algorithm>Blowfish</algorithm>
