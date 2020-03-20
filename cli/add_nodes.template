@@ -47,7 +47,7 @@ servers = [
 # NOTE: don't add any publishers other than 'gracedb'
 # to the production server (lvalert.cgca.uwm.edu)
 pub_list = {
-    'lvalert.lvalert': [
+    '${LVALERT_SERVER}': [
         'gracedb',
     ],
 #    'lvalert.cgca.uwm.edu': [

@@ -5,3 +5,4 @@ TAG="test"
 
 docker build -t ${IMAGE}:${TAG} .
 
+docker push ${IMAGE}:${TAG}
