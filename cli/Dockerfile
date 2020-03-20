@@ -6,8 +6,9 @@ ENV LVALERT_PASSWORD dummy
 
 ADD add_nodes.template /root/
 ADD entrypoint /root/entrypoint
+RUN chmod +x /root/entrypoint
 
 WORKDIR /root
-
-CMD ["python", "add_nodes.py"]
+USER root
+#CMD ["python", "add_nodes.py"]
 ENTRYPOINT ["/root/entrypoint"]
