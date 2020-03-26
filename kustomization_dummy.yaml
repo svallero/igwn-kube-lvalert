@@ -8,7 +8,6 @@ secretGenerator:
   - encryption-key=<changeme>
   - db-password=<changeme>
   - db-root-password=<changeme>
-  - lvalert-password=<changeme>
 - name: mysql-initdb-config
   namespace: lvalert
   literals:
