@@ -14,7 +14,7 @@ spec:
         #command: ["sleep"," 10000000000"]
         env:
           - name: LVALERT_SERVER
-            value: lvalert
+            value: lvalert.lvalert
           - name: LVALERT_USER
             value: gracedb
           - name: LVALERT_PASSWORD
