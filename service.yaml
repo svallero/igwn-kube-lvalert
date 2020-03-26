@@ -6,13 +6,16 @@ metadata:
   annotations:
     service.beta.kubernetes.io/openstack-internal-load-balancer: "true"  
 spec:
-  type: LoadBalancer
+  #type: LoadBalancer
+  type: NodePort
   ports:
   - name: p0
     port: 9090
-    targetPort: 9090
+    #targetPort: 9090
   - name: p1
     port: 5222
-    targetPort: 5222
+    #targetPort: 5222
+  - name: p2
+    port: 8001
   selector:
     app: lvalert
