@@ -18,6 +18,7 @@ spec:
       containers:                                                  
       - name: openfire    
         image: svallero/igwn-openfire:test                                  
+        imagePullPolicy: Always
         env:     
         - name: SERVER_FQDN
           value: lvalert.lvalert
