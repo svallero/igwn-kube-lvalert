@@ -9,8 +9,11 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteMany
+  claimRef:
+    namespace: lvalert 
+    name: lvalert-mysql-pvc
   hostPath:
-    path: "/mnt/data"
+    path: "/mnt/mysql-lvalert"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
