@@ -66,6 +66,23 @@ spec:
           containerPort: 7070                                      
         - name: of-7                                               
           containerPort: 5229     
+        readinessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 20 
+          timeoutSeconds: 10 
+          failureThreshold: 3 
+        livenessProbe:
+          tcpSocket:
+            port: 9090
+          initialDelaySeconds: 10
+          periodSeconds: 20 
+          timeoutSeconds: 10 
+          failureThreshold: 3 
+        volumeMounts:                                              
+        - name: openfire-persistent-storage                           
+          mountPath: /var/lib/openfire 
       - name: mysql                                                
         image: mariadb:10.5.1                                      
         env:              
@@ -91,6 +108,26 @@ spec:
           mountPath: /var/lib/mysql    
         - name: mysql-initdb
           mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          initialDelaySeconds: 100 
+          periodSeconds: 20 
+          timeoutSeconds: 10 
+          failureThreshold: 3 
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          initialDelaySeconds: 10
+          periodSeconds: 20 
+          timeoutSeconds: 10 
+          failureThreshold: 3 
       volumes:                                                     
       - name: mysql-persistent-storage                             
         persistentVolumeClaim:                                     
@@ -98,3 +135,6 @@ spec:
       - name: mysql-initdb
         secret:
           secretName: mysql-initdb-config
+      - name: openfire-persistent-storage                             
+        persistentVolumeClaim:                                     
+          claimName: openfire-pvc      

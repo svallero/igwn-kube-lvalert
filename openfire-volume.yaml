@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openfire-pv
+  namespace: lvalert
+spec:
+  storageClassName: "cinder"
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  claimRef:
+    namespace: lvalert 
+    name: openfire-pvc
+  hostPath:
+    path: "/mnt/openfire"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openfire-pvc
+  namespace: lvalert
+spec:
+  storageClassName: "cinder"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
