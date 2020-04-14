@@ -1,7 +1,7 @@
 #!/bin/sh
 
 IMAGE="svallero/igwn-openfire"
-TAG="test"
+TAG="persist"
 
 docker build -t ${IMAGE}:${TAG} .
 

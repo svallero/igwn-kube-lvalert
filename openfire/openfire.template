@@ -43,6 +43,11 @@
         <xmpp>
           <domain>${SERVER_XMPP_DOMAIN}</domain>
           <fqdn>${SERVER_FQDN}</fqdn>
+          <pubsub>
+            <default>
+               <persistItems>true</persistItems> 
+            </default>
+          </pubsub>
         </xmpp>
         <encryption>
           <algorithm>Blowfish</algorithm>
