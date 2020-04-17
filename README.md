@@ -44,4 +44,5 @@ Login to the Lvalert web interface, create the *gracedb* user and grant her perm
 
 If you use the NodePort service type, the web interface is reachable at the Pod host IP, on the port mapped to the 9090 one (31723 in the example above). 
 
-
+## 7 - add_nodes.yaml
+This runs a Job that adds all the required PubSub nodes.
