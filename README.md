@@ -3,7 +3,7 @@ Lvalert deployment on Kubernetes cluster on premises. It was developed for a Kub
 
 **TODO:** 
 - external IP provisioning and certificate handling
-- high-availability configuration with more than one replica.
+- high-availability configuration with more than one replica
 
 ## 0 - Create you custom image (optional)
 The Openfire Docker image is created from the existing project: [quantumobject/docker-openfire](https://github.com/QuantumObject/docker-openfire). The custom entrypoint produces the desired *openfire.xml* configuration file starting from a template and some environment variable. 
@@ -21,14 +21,14 @@ Group all resources under the same namespace.
 Create persistent volumes for Openfire and database. You might need to edit this file. 
 
 ## 3 - kustomization.yaml
-Insert your secrets here. The kustomization file is applyed with:
+Insert your secrets here. The kustomization file is applied with:
 
 ```kubectl apply -k .```
 
 The file name must be *kustomization.yaml*.
 
 ## 4 - lvalert.yaml
-This manifest creates the actual deploymnet: a single Pod with 2 containers, one for Openfire and one for the Mysql database. 
+This manifest creates the actual deployment: a single Pod with 2 containers, one for Openfire and one for the Mysql database. 
 
 ## 5 - service.yaml
 Allow the Pod to be reached from the outside. You might need to edit this file if you want to use a different service type.
