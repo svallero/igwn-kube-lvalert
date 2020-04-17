@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: cli
-        image: svallero/igwn-lvalert-cli:test 
+        image: svallero/igwn-lvalert-cli:latest 
         imagePullPolicy: Always
         #command: ["sleep"," 10000000000"]
         env:
