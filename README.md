@@ -3,7 +3,7 @@ Lvalert deployment on Kubernetes on premises. It was developed for a Kubernetes 
 
 **TODO:** 
 - external IP provisioning and certificate handling
-- high-availability configuration with more than one replicas
+- high-availability configuration with more than one replica.
 
 ## 0 - Create you custom image (optional)
 The Openfire Docker image is created from the existing project: [quantumobject/docker-openfire](https://github.com/QuantumObject/docker-openfire). The custom entrypoint produces the desired *openfire.xml* configuration file starting from a template and some environment variable. 
