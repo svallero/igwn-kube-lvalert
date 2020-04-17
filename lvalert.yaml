@@ -17,7 +17,8 @@ spec:
       hostname: lvalert                                            
       containers:                                                  
       - name: openfire    
-        image: svallero/igwn-openfire:test                                  
+        #image: svallero/igwn-openfire:test                                  
+        image: svallero/igwn-openfire:persist                                  
         imagePullPolicy: Always
         env:     
         - name: SERVER_FQDN
