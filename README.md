@@ -18,7 +18,7 @@ Apply the following manifests with:
 Group all resources under the same namespace.
 
 ## 2 - mysql-volume.yaml and openfire-volume.yaml
-Create persistent volumes for Openfire and database. You might need to edit this file. 
+Create persistent volumes for Openfire and database. You might need to edit these files. 
 
 ## 3 - kustomization.yaml
 Insert your secrets here. The kustomization file is applied with:
